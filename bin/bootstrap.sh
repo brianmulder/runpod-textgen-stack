@@ -50,6 +50,12 @@ POD_IP=$POD_IP
 TLS_PORT=$TLS_PORT
 EOF_POD
 
+# Send stunnel setup script and execute inside the pod
+SETUP_SCRIPT="$ROOT_DIR/bin/setup-stunnel.sh"
+SEND_OUTPUT=$(runpodctl send "$SETUP_SCRIPT")
+CODE=$(echo "$SEND_OUTPUT" | awk '/runpodctl receive/ {print $2}')
+runpodctl ssh "$POD_ID" -- "runpodctl receive $CODE && bash $(basename "$SETUP_SCRIPT")"
+
 # Start port forwarder
 "$SCRIPT_DIR/port-stick.sh" "$POD_IP" &
 PORT_STICK_PID=$!
