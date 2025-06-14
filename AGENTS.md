@@ -13,7 +13,7 @@
 | **STACK_NAME**          | `runpod-textgen-stack` |
 | **SERVICE_NAME**        | `textgen`              |
 | **EXTERNAL_TLS_PORT**  | 8443                   |
-| **INTERNAL_HTTP_PORT** | 7860                   |
+| **INTERNAL_HTTP_PORT** | 5000                   |
 | **MODEL_VOLUME_ENV**   | `VOLUME_ID_TEXTGEN_MODELS` |
 | **OUTPUT_VOLUME_ENV**  | optional               |
 

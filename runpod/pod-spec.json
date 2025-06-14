@@ -13,7 +13,7 @@
   "dockerStartCmd": [
     "--listen",
     "--port",
-    "7860",
+    "5000",
     "--api",
     "--extensions",
     "openai",

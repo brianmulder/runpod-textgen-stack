@@ -20,7 +20,7 @@ foreground = yes
 pid =
 [webui]
 accept = 0.0.0.0:443
-connect = 127.0.0.1:7860
+connect = 127.0.0.1:5000
 cert = $CERT_DIR/cert.pem
 key  = $CERT_DIR/key.pem
 sslVersion = TLSv1.2
