@@ -19,7 +19,7 @@ cat >/etc/stunnel/stunnel.conf <<'EOS'
 foreground = yes
 pid =
 [webui]
-accept = 0.0.0.0:8443
+accept = 0.0.0.0:443
 connect = 127.0.0.1:7860
 cert = $CERT_DIR/cert.pem
 key  = $CERT_DIR/key.pem

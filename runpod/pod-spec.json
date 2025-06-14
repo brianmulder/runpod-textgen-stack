@@ -8,7 +8,7 @@
   "containerDiskInGb": 40,
   "networkVolumeId": "$VOLUME_ID",
   "volumeMountPath": "/workspace",
-  "ports": ["8443/tcp"],
+  "ports": ["443/tcp"],
   "dockerEntrypoint": ["/entrypoint.sh"],
   "dockerStartCmd": [
     "--listen",

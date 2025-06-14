@@ -31,7 +31,10 @@ if [ -z "$VOLUME_ID" ]; then
 fi
 
 # Render pod spec
-sed "s/\$GPU_TYPE/$GPU_TYPE/;s/\$VOLUME_ID/$VOLUME_ID/" "$POD_SPEC_TEMPLATE" >"$POD_SPEC"
+sed -e "s|\$GPU_TYPE|$GPU_TYPE|" \
+    -e "s|\$VOLUME_ID|$VOLUME_ID|" \
+    -e "s|\$MODEL_DIR|$MODEL_DIR|" \
+    "$POD_SPEC_TEMPLATE" >"$POD_SPEC"
 
 # Create pod
 POD_ID=$(runpodctl create pod --spec "$POD_SPEC" -o json | jq -r '.id')
@@ -43,10 +46,13 @@ while true; do
     sleep 5
 done
 
-POD_IP=$(runpodctl get pod "$POD_ID" -o json | jq -r '.publicIp')
+POD_INFO=$(runpodctl get pod "$POD_ID" -o json)
+POD_IP=$(echo "$POD_INFO" | jq -r '.publicIp')
+POD_PORT=$(echo "$POD_INFO" | jq -r '.ports[0].publicPort')
 cat >"$ROOT_DIR/.pod_env" <<EOF_POD
 POD_ID=$POD_ID
 POD_IP=$POD_IP
+POD_PORT=$POD_PORT
 TLS_PORT=$TLS_PORT
 EOF_POD
 
@@ -57,11 +63,11 @@ CODE=$(echo "$SEND_OUTPUT" | awk '/runpodctl receive/ {print $2}')
 runpodctl ssh "$POD_ID" -- "runpodctl receive $CODE && bash $(basename "$SETUP_SCRIPT")"
 
 # Start port forwarder
-"$SCRIPT_DIR/port-stick.sh" "$POD_IP" &
+"$SCRIPT_DIR/port-stick.sh" "$POD_IP" "$POD_PORT" &
 PORT_STICK_PID=$!
 echo $PORT_STICK_PID >"$ROOT_DIR/.port_stick.pid"
 
 # Fetch certificate
-"$SCRIPT_DIR/fetch-cert.sh" "$POD_IP"
+"$SCRIPT_DIR/fetch-cert.sh" "$POD_IP" "$POD_PORT"
 
 echo "Pod ready at https://localhost:$TLS_PORT"

@@ -1,7 +1,7 @@
 # Architecture
 
 ```text
-OpenAI client -> localhost:8443 --+--> socat --> POD_IP:8443 --> stunnel --> web-ui
+OpenAI client -> localhost:8443 --+--> socat --> POD_IP:$PUBLIC_PORT --> stunnel (443) --> web-ui
 ```
 
 1. **socat** keeps a local port bound to the pod.
