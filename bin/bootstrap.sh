@@ -32,7 +32,7 @@ POD_ID=$(runpodctl create pod \
     --volumePath /workspace \
     --ports 443/tcp \
     --ports 444/tcp \
-    --args "--listen --api --extensions openai --model-dir $MODEL_DIR" \
+    --env EXTRA_LAUNCH_ARGS="--listen --api --extensions openai --model-dir $MODEL_DIR" \
     --communityCloud | awk '/ID/ {print $NF}')
 
 # Wait for running

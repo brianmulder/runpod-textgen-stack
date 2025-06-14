@@ -10,12 +10,7 @@
   "volumeMountPath": "/workspace",
   "ports": ["443/tcp", "444/tcp"],
   "dockerEntrypoint": ["/entrypoint.sh"],
-  "dockerStartCmd": [
-    "--listen",
-    "--api",
-    "--extensions",
-    "openai",
-    "--model-dir",
-    "$MODEL_DIR"
-  ]
+  "env": {
+    "EXTRA_LAUNCH_ARGS": "--listen --api --extensions openai --model-dir $MODEL_DIR"
+  }
 }
