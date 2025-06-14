@@ -8,12 +8,10 @@
   "containerDiskInGb": 40,
   "networkVolumeId": "$VOLUME_ID",
   "volumeMountPath": "/workspace",
-  "ports": ["443/tcp"],
+  "ports": ["443/tcp", "444/tcp"],
   "dockerEntrypoint": ["/entrypoint.sh"],
   "dockerStartCmd": [
     "--listen",
-    "--port",
-    "5000",
     "--api",
     "--extensions",
     "openai",

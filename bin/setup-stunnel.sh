@@ -18,8 +18,15 @@ fi
 cat >/etc/stunnel/stunnel.conf <<'EOS'
 foreground = yes
 pid =
-[webui]
+[ui]
 accept = 0.0.0.0:443
+connect = 127.0.0.1:7860
+cert = $CERT_DIR/cert.pem
+key  = $CERT_DIR/key.pem
+sslVersion = TLSv1.2
+
+[api]
+accept = 0.0.0.0:444
 connect = 127.0.0.1:5000
 cert = $CERT_DIR/cert.pem
 key  = $CERT_DIR/key.pem

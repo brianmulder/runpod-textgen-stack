@@ -3,11 +3,12 @@ set -euo pipefail
 
 : "${1:?pod IP required}"
 POD_IP=$1
-: "${2:?pod port required}"
+: "${2:?public port required}"
 POD_PORT=$2
-: "${TLS_PORT:=8443}"
+: "${3:?local port required}"
+LOCAL_PORT=$3
 
 while true; do
-    socat TCP-LISTEN:"$TLS_PORT",reuseaddr,fork TCP:"$POD_IP":"$POD_PORT" || true
+    socat TCP-LISTEN:"$LOCAL_PORT",reuseaddr,fork TCP:"$POD_IP":"$POD_PORT" || true
     sleep 2
 done

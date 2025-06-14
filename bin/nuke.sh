@@ -5,7 +5,9 @@ SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 ROOT_DIR=$(dirname "$SCRIPT_DIR")
 
 if [ -f "$ROOT_DIR/.port_stick.pid" ]; then
-    kill "$(cat "$ROOT_DIR/.port_stick.pid")" 2>/dev/null || true
+    while read -r pid; do
+        kill "$pid" 2>/dev/null || true
+    done <"$ROOT_DIR/.port_stick.pid"
     rm "$ROOT_DIR/.port_stick.pid"
 fi
 

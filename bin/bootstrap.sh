@@ -20,6 +20,7 @@ fi
 : "${MODEL_DIR:=/workspace/models}"
 : "${HOME_IP:=}"
 : "${TLS_PORT:=8443}"
+: "${API_PORT:=8444}"
 
 POD_SPEC_TEMPLATE="$ROOT_DIR/runpod/pod-spec.json"
 POD_SPEC="$ROOT_DIR/runpod/pod-spec-rendered.json"
@@ -48,12 +49,15 @@ done
 
 POD_INFO=$(runpodctl get pod "$POD_ID" -o json)
 POD_IP=$(echo "$POD_INFO" | jq -r '.publicIp')
-POD_PORT=$(echo "$POD_INFO" | jq -r '.ports[0].publicPort')
+UI_PORT_REMOTE=$(echo "$POD_INFO" | jq -r '.ports[] | select(.containerPort==443) | .publicPort')
+API_PORT_REMOTE=$(echo "$POD_INFO" | jq -r '.ports[] | select(.containerPort==444) | .publicPort')
 cat >"$ROOT_DIR/.pod_env" <<EOF_POD
 POD_ID=$POD_ID
 POD_IP=$POD_IP
-POD_PORT=$POD_PORT
 TLS_PORT=$TLS_PORT
+API_PORT=$API_PORT
+UI_PORT_REMOTE=$UI_PORT_REMOTE
+API_PORT_REMOTE=$API_PORT_REMOTE
 EOF_POD
 
 # Send stunnel setup script and execute inside the pod
@@ -63,11 +67,14 @@ CODE=$(echo "$SEND_OUTPUT" | awk '/runpodctl receive/ {print $2}')
 runpodctl ssh "$POD_ID" -- "runpodctl receive $CODE && bash $(basename "$SETUP_SCRIPT")"
 
 # Start port forwarder
-"$SCRIPT_DIR/port-stick.sh" "$POD_IP" "$POD_PORT" &
-PORT_STICK_PID=$!
-echo $PORT_STICK_PID >"$ROOT_DIR/.port_stick.pid"
+"$SCRIPT_DIR/port-stick.sh" "$POD_IP" "$UI_PORT_REMOTE" "$TLS_PORT" &
+PID_UI=$!
+"$SCRIPT_DIR/port-stick.sh" "$POD_IP" "$API_PORT_REMOTE" "$API_PORT" &
+PID_API=$!
+echo "$PID_UI $PID_API" >"$ROOT_DIR/.port_stick.pid"
 
 # Fetch certificate
-"$SCRIPT_DIR/fetch-cert.sh" "$POD_IP" "$POD_PORT"
+"$SCRIPT_DIR/fetch-cert.sh" "$POD_IP" "$UI_PORT_REMOTE"
 
-echo "Pod ready at https://localhost:$TLS_PORT"
+echo "UI available at https://localhost:$TLS_PORT"
+echo "API available at https://localhost:$API_PORT"
