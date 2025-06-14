@@ -16,38 +16,33 @@ fi
 
 : "${RUNPOD_API_KEY:?RUNPOD_API_KEY not set}"
 : "${GPU_TYPE:?GPU_TYPE not set}"
-: "${VOLUME_NAME:?VOLUME_NAME not set}"
+: "${VOLUME_ID_TEXTGEN_MODELS:?VOLUME_ID_TEXTGEN_MODELS not set}"
 : "${MODEL_DIR:=/workspace/models}"
 : "${HOME_IP:=}"
 : "${TLS_PORT:=8443}"
 : "${API_PORT:=8444}"
 
-POD_SPEC_TEMPLATE="$ROOT_DIR/runpod/pod-spec.json"
-POD_SPEC="$ROOT_DIR/runpod/pod-spec-rendered.json"
-
-# Ensure volume exists
-VOLUME_ID=$(runpodctl get volume "$VOLUME_NAME" -o json | jq -r '.id' 2>/dev/null || true)
-if [ -z "$VOLUME_ID" ]; then
-    VOLUME_ID=$(runpodctl create volume --name "$VOLUME_NAME" --size 200 -o json | jq -r '.id')
-fi
-
-# Render pod spec
-sed -e "s|\$GPU_TYPE|$GPU_TYPE|" \
-    -e "s|\$VOLUME_ID|$VOLUME_ID|" \
-    -e "s|\$MODEL_DIR|$MODEL_DIR|" \
-    "$POD_SPEC_TEMPLATE" >"$POD_SPEC"
-
-# Create pod
-POD_ID=$(runpodctl create pod --spec "$POD_SPEC" -o json | jq -r '.id')
+POD_ID=$(runpodctl create pod \
+    --name tg-webui \
+    --gpuType "$GPU_TYPE" \
+    --gpuCount 1 \
+    --imageName atinoda/text-generation-webui:default-nightly \
+    --containerDiskSize 40 \
+    --networkVolumeId "$VOLUME_ID_TEXTGEN_MODELS" \
+    --volumePath /workspace \
+    --ports 443/tcp \
+    --ports 444/tcp \
+    --args "--listen --api --extensions openai --model-dir $MODEL_DIR" \
+    --communityCloud | awk '/ID/ {print $NF}')
 
 # Wait for running
 while true; do
-    STATUS=$(runpodctl get pod "$POD_ID" -o json | jq -r '.desiredStatus')
+    STATUS=$(runpodctl get pod "$POD_ID" --allfields | jq -r '.desiredStatus')
     [ "$STATUS" = "RUNNING" ] && break
     sleep 5
 done
 
-POD_INFO=$(runpodctl get pod "$POD_ID" -o json)
+POD_INFO=$(runpodctl get pod "$POD_ID" --allfields)
 POD_IP=$(echo "$POD_INFO" | jq -r '.publicIp')
 UI_PORT_REMOTE=$(echo "$POD_INFO" | jq -r '.ports[] | select(.containerPort==443) | .publicPort')
 API_PORT_REMOTE=$(echo "$POD_INFO" | jq -r '.ports[] | select(.containerPort==444) | .publicPort')

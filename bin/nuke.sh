@@ -16,11 +16,9 @@ if [ -f "$ROOT_DIR/.pod_env" ]; then
     # shellcheck disable=SC1091
     source "$ROOT_DIR/.pod_env"
     runpodctl stop pod "$POD_ID" || true
-    # Uncomment to delete
-    # runpodctl delete pod "$POD_ID" || true
+    # Uncomment to remove the pod entirely
+    # runpodctl remove pod "$POD_ID" || true
     rm "$ROOT_DIR/.pod_env"
 fi
-
-rm -f "$ROOT_DIR/runpod/pod-spec-rendered.json"
 
 echo "Pod stopped"
