@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://runpod.io/schemas/pod-spec.json",
+  "title": "RunPod \u2010 Pod specification (Create-Pod request)",
+  "description": "Input object for POST /pods. Based on the public RunPod API docs.",
+  "type": "object",
+  "additionalProperties": false,
+
+  "properties": {
+    "name":                { "type": "string",  "minLength": 1, "description": "Human\u2011readable pod label." },
+    "cloudType":           { "type": "string",  "enum": ["SECURE","COMMUNITY"], "description": "RunPod cloud tier." },
+    "computeType":         { "type": "string",  "enum": ["GPU","CPU"],        "description": "Whether the pod has GPUs." },
+    "imageName":           { "type": "string",  "minLength": 1, "description": "Container image (registry/repo:tag)." },
+
+    "gpuCount":            { "type": "integer", "minimum": 0 },
+    "gpuTypeIds":          { "type": "array",   "items": { "type": "string" } },
+    "gpuTypePriority":     { "type": "string",  "enum": ["availability","cost"], "default": "availability" },
+    "vcpuCount":           { "type": "integer", "minimum": 0 },
+    "cpuFlavorIds":        { "type": "array",   "items": { "type": "string" } },
+    "cpuFlavorPriority":   { "type": "string",  "enum": ["availability","cost"] },
+
+    "minVCPUPerGPU":       { "type": "integer", "minimum": 0 },
+    "minRAMPerGPU":        { "type": "integer", "minimum": 0, "description": "GiB per GPU" },
+    "containerDiskInGb":   { "type": "integer", "minimum": 0 },
+    "volumeInGb":          { "type": "integer", "minimum": 0 },
+    "volumeMountPath":     { "type": "string" },
+    "volumeEncrypted":     { "type": "boolean" },
+    "networkVolumeId":     { "type": "string" },
+    "dataCenterIds":       { "type": "array",   "items": { "type": "string" } },
+    "dataCenterPriority":  { "type": "string",  "enum": ["availability","cost"] },
+    "countryCodes":        { "type": "array",   "items": { "type": "string", "pattern": "^[A-Z]{2}$" } },
+    "allowedCudaVersions": { "type": "array",   "items": { "type": "string", "pattern": "^\\d+\\.\\d+$" } },
+
+    "ports":               { "type": "array",   "items": { "type": "string", "pattern": "^[0-9]+\\/(tcp|udp|http)$" } },
+    "supportPublicIp":     { "type": "boolean" },
+    "globalNetworking":    { "type": "boolean" },
+    "minDownloadMbps":     { "type": "integer", "minimum": 0 },
+    "minUploadMbps":       { "type": "integer", "minimum": 0 },
+    "minDiskBandwidthMBps":{ "type": "integer", "minimum": 0 },
+
+    "interruptible":       { "type": "boolean" },
+    "locked":              { "type": "boolean" },
+
+    "dockerEntrypoint":    { "type": "array",   "items": { "type": "string" } },
+    "dockerStartCmd":      { "type": "array",   "items": { "type": "string" } },
+    "env":                 { "type": "object",  "additionalProperties": { "type": "string" } },
+    "containerRegistryAuthId": { "type": "string" },
+
+    "templateId":          { "type": ["string","null"] }
+  },
+
+  "required": ["name", "cloudType", "computeType", "imageName"],
+
+  "allOf": [
+    {
+      "if":   { "properties": { "computeType": { "const": "GPU" } } },
+      "then": { "required": ["gpuCount", "gpuTypeIds"] }
+    },
+    {
+      "if":   { "properties": { "computeType": { "const": "CPU" } } },
+      "then": {
+        "not": { "anyOf": [
+                  { "required": ["gpuTypeIds"] },
+                  { "required": ["gpuCount"]  }
+                ] }
+      }
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "name": "tg-webui",
+  "cloudType": "COMMUNITY",
+  "computeType": "GPU",
+  "imageName": "atinoda/text-generation-webui:default-nightly",
+  "gpuCount": 1,
+  "gpuTypeIds": ["$GPU_TYPE"],
+  "containerDiskInGb": 40,
+  "networkVolumeId": "$VOLUME_ID",
+  "volumeMountPath": "/workspace",
+  "ports": ["443/tcp", "444/tcp"],
+  "dockerEntrypoint": ["/entrypoint.sh"],
+  "env": {
+    "EXTRA_LAUNCH_ARGS": "--listen --api --extensions openai --model-dir $MODEL_DIR"
+  }
+}
